@@ -63,7 +63,7 @@ extern "C" {
  *
  * @{
  */
-#define CLOCK_USE_PLL       (1)
+#define CLOCK_USE_PLL       (0)
 
 #if CLOCK_USE_PLL
 /* edit these values to adjust the PLL output frequency */
@@ -107,26 +107,17 @@ extern "C" {
  */
 static const uart_conf_t uart_config[] = {
     {
-        .dev    = &SERCOM5->USART,
-        .rx_pin = GPIO_PIN(PB,23),
-        .tx_pin = GPIO_PIN(PB,22),
-        .mux    = GPIO_MUX_D,
-        .rx_pad = UART_PAD_RX_3,
-        .tx_pad = UART_PAD_TX_2
-    },
-    {
-        .dev    = &SERCOM0->USART,
-        .rx_pin = GPIO_PIN(PA,11),
-        .tx_pin = GPIO_PIN(PA,10),
+        .dev    = &SERCOM3->USART,
+        .rx_pin = GPIO_PIN(PA,23),
+        .tx_pin = GPIO_PIN(PA,24),
         .mux    = GPIO_MUX_C,
-        .rx_pad = UART_PAD_RX_3,
+        .rx_pad = UART_PAD_RX_1,
         .tx_pad = UART_PAD_TX_2
     }
 };
 
 /* interrupt function name mapping */
-#define UART_0_ISR          isr_sercom5
-#define UART_1_ISR          isr_sercom0
+#define UART_0_ISR          isr_sercom0
 
 #define UART_NUMOF          (sizeof(uart_config) / sizeof(uart_config[0]))
 /** @} */
@@ -145,14 +136,14 @@ static const uart_conf_t uart_config[] = {
 /* PWM device configuration */
 static const pwm_conf_t pwm_config[] = {
 #if PWM_0_EN
-    {TCC0, {
+    {TC0, {
         /* GPIO pin, MUX value, TCC channel */
         { GPIO_PIN(PA, 8), GPIO_MUX_E,  0 },
         { GPIO_PIN(PA, 9), GPIO_MUX_E,  1 },
     }},
 #endif
 #if PWM_1_EN
-    {TCC1, {
+    {TC1, {
         /* GPIO pin, MUX value, TCC channel */
         { GPIO_PIN(PA, 6), GPIO_MUX_E, 0 },
         { GPIO_PIN(PA, 7), GPIO_MUX_E, 1 },
@@ -185,10 +176,10 @@ static const pwm_conf_t pwm_config[] = {
  */
 static const spi_conf_t spi_config[] = {
     {
-        .dev      = &SERCOM4->SPI,
-        .miso_pin = GPIO_PIN(PA, 12),
-        .mosi_pin = GPIO_PIN(PB, 10),
-        .clk_pin  = GPIO_PIN(PB, 11),
+        .dev      = &SERCOM0->SPI,
+        .miso_pin = GPIO_PIN(PA, 4),
+        .mosi_pin = GPIO_PIN(PA, 6),
+        .clk_pin  = GPIO_PIN(PA, 7),
         .miso_mux = GPIO_MUX_D,
         .mosi_mux = GPIO_MUX_D,
         .clk_mux  = GPIO_MUX_D,

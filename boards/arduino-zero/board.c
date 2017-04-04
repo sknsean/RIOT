@@ -30,4 +30,7 @@ void board_init(void)
     cpu_init();
     /* initialize the on-board Amber "L" LED on pin PA17 */
     gpio_init(LED0_PIN, GPIO_OUT);
+
+    gpio_set(LED0_PIN);
+    //gpio_clear(LED0_PIN);
 }

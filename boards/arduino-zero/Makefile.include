@@ -1,6 +1,6 @@
 # define the cpu used by Arduino/Genuino Zero board
-export CPU = samd21
-export CPU_MODEL = samd21g18a
+export CPU = samd20
+export CPU_MODEL = samd20e18
 
 # set default port depending on operating system
 export PORT_LINUX ?= /dev/ttyACM0
