@@ -79,11 +79,16 @@ void spi_init(spi_t bus)
 
     /* reset all device configuration */
     dev(bus)->CTRLA.reg |= SERCOM_SPI_CTRLA_SWRST;
+#if defined(CPU_FAM_SAMD20)
+    while ((dev(bus)->CTRLA.reg & SERCOM_SPI_CTRLA_SWRST) ||
+           (dev(bus)->STATUS.reg & SERCOM_SPI_STATUS_SYNCBUSY));
+#elif
     while ((dev(bus)->CTRLA.reg & SERCOM_SPI_CTRLA_SWRST) ||
            (dev(bus)->SYNCBUSY.reg & SERCOM_SPI_SYNCBUSY_SWRST));
+#endif
 
     /* configure base clock: using GLK GEN 0 */
-#if defined(CPU_FAM_SAMD21)
+#if defined(CPU_FAM_SAMD20) || defined(CPU_FAM_SAMD21)
     GCLK->CLKCTRL.reg = (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 |
                          (SERCOM0_GCLK_ID_CORE + sercom_id(dev(bus))));
     while (GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY) {}
@@ -135,7 +140,9 @@ int spi_acquire(spi_t bus, spi_cs_t cs, spi_mode_t mode, spi_clk_t clk)
 
     /* finally enable the device */
     dev(bus)->CTRLA.reg |= SERCOM_SPI_CTRLA_ENABLE;
+#if !defined(CPU_FAM_SAMD20)
     while (dev(bus)->SYNCBUSY.reg & SERCOM_SPI_SYNCBUSY_ENABLE) {}
+#endif
 
     return SPI_OK;
 }
@@ -144,7 +151,9 @@ void spi_release(spi_t bus)
 {
     /* disable device and put it back to sleep */
     dev(bus)->CTRLA.reg &= ~(SERCOM_SPI_CTRLA_ENABLE);
+#if !defined(CPU_FAM_SAMD20)
     while (dev(bus)->SYNCBUSY.reg & SERCOM_SPI_SYNCBUSY_ENABLE) {}
+#endif
     poweroff(bus);
     /* release access to the device */
     mutex_unlock(&locks[bus]);
