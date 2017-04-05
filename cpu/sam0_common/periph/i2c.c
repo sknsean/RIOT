@@ -103,7 +103,11 @@ int i2c_init_master(i2c_t dev, i2c_speed_t speed)
 
     /* Reset I2C */
     I2CSercom->CTRLA.reg = SERCOM_I2CS_CTRLA_SWRST;
+#if defined(CPU_FAM_SAMD20)
+    while (I2CSercom->STATUS.reg & SERCOM_I2CM_STATUS_SYNCBUSY) {}
+#else
     while (I2CSercom->SYNCBUSY.reg & SERCOM_I2CM_SYNCBUSY_MASK) {}
+#endif
 
     /* Turn on power manager for sercom */
     PM->APBCMASK.reg |= (PM_APBCMASK_SERCOM0 << (sercom_gclk_id - GCLK_CLKCTRL_ID_SERCOM0_CORE_Val));
@@ -136,7 +140,11 @@ int i2c_init_master(i2c_t dev, i2c_speed_t speed)
     gpio_init_mux(pin_scl, mux);
 
     /* I2C CONFIGURATION */
+#if defined(CPU_FAM_SAMD20)
+    while (I2CSercom->STATUS.reg & SERCOM_I2CM_STATUS_SYNCBUSY) {}
+#else
     while (I2CSercom->SYNCBUSY.reg & SERCOM_I2CM_SYNCBUSY_MASK) {}
+#endif
 
     /* Set sercom module to operate in I2C master mode. */
     I2CSercom->CTRLA.reg = SERCOM_I2CM_CTRLA_MODE_I2C_MASTER;
@@ -151,22 +159,28 @@ int i2c_init_master(i2c_t dev, i2c_speed_t speed)
         case I2C_SPEED_NORMAL:
             tmp_baud = (int32_t)(((clock_source_speed + (2 * (100000)) - 1) / (2 * (100000))) - 5);
             if (tmp_baud < 255 && tmp_baud > 0) {
+#if !defined(CPU_FAM_SAMD20)
                 I2CSercom->CTRLA.reg |= SERCOM_I2CM_CTRLA_SPEED(0);
+#endif
                 I2CSercom->BAUD.reg = SERCOM_I2CM_BAUD_BAUD(tmp_baud);
             }
             break;
         case I2C_SPEED_FAST:
             tmp_baud = (int32_t)(((clock_source_speed + (2 * (400000)) - 1) / (2 * (400000))) - 5);
             if (tmp_baud < 255 && tmp_baud > 0) {
+#if !defined(CPU_FAM_SAMD20)
                 I2CSercom->CTRLA.reg |= SERCOM_I2CM_CTRLA_SPEED(0);
+#endif
                 I2CSercom->BAUD.reg = SERCOM_I2CM_BAUD_BAUD(tmp_baud);
             }
             break;
         case I2C_SPEED_HIGH:
             tmp_baud = (int32_t)(((clock_source_speed + (2 * (3400000)) - 1) / (2 * (3400000))) - 1);
             if (tmp_baud < 255 && tmp_baud > 0) {
+#if !defined(CPU_FAM_SAMD20)
                 I2CSercom->CTRLA.reg |= SERCOM_I2CM_CTRLA_SPEED(2);
                 I2CSercom->BAUD.reg = SERCOM_I2CM_BAUD_HSBAUD(tmp_baud);
+#endif
             }
             break;
         default:
@@ -340,7 +354,9 @@ static void _i2c_poweron(SercomI2cm *sercom)
         return;
     }
     sercom->CTRLA.bit.ENABLE = 1;
+#if !defined(CPU_FAM_SAMD20)
     while (sercom->SYNCBUSY.bit.ENABLE) {}
+#endif
 }
 
 void i2c_poweron(i2c_t dev)
@@ -362,7 +378,9 @@ static void _i2c_poweroff(SercomI2cm *sercom)
         return;
     }
     sercom->CTRLA.bit.ENABLE = 0;
+#if !defined(CPU_FAM_SAMD20)
     while (sercom->SYNCBUSY.bit.ENABLE) {}
+#endif
 }
 
 void i2c_poweroff(i2c_t dev)
@@ -382,14 +400,22 @@ static int _start(SercomI2cm *dev, uint8_t address, uint8_t rw_flag)
 {
     /* Wait for hardware module to sync */
     DEBUG("Wait for device to be ready\n");
+#if defined(CPU_FAM_SAMD20)
+    while (dev->STATUS.reg & SERCOM_I2CM_STATUS_SYNCBUSY) {}
+#else
     while (dev->SYNCBUSY.reg & SERCOM_I2CM_SYNCBUSY_MASK) {}
+#endif
 
     /* Set action to ACK. */
     dev->CTRLB.reg &= ~SERCOM_I2CM_CTRLB_ACKACT;
 
     /* Send Start | Address | Write/Read */
     DEBUG("Generate start condition by sending address\n");
+#if defined(CPU_FAM_SAMD20)
+    dev->ADDR.reg = (address << 1) | rw_flag;
+#else
     dev->ADDR.reg = (address << 1) | rw_flag | (0 << SERCOM_I2CM_ADDR_HS_Pos);
+#endif
 
     /* Wait for response on bus. */
     if (rw_flag == I2C_FLAG_READ) {
@@ -439,7 +465,11 @@ static inline int _write(SercomI2cm *dev, const uint8_t *data, int length)
         }
 
         /* Wait for hardware module to sync */
+#if defined(CPU_FAM_SAMD20)
+        while (dev->STATUS.reg & SERCOM_I2CM_STATUS_SYNCBUSY) {}
+#else
         while (dev->SYNCBUSY.reg & SERCOM_I2CM_SYNCBUSY_MASK) {}
+#endif
 
         DEBUG("Written byte #%i to data reg, now waiting for DR to be empty again\n", buffer_counter);
         dev->DATA.reg = data[buffer_counter++];
@@ -473,7 +503,12 @@ static inline int _read(SercomI2cm *dev, uint8_t *data, int length)
         }
 
         /* Wait for hardware module to sync */
+#if defined(CPU_FAM_SAMD20)
+        while (dev->STATUS.reg & SERCOM_I2CM_STATUS_SYNCBUSY) {}
+#else
         while (dev->SYNCBUSY.reg & SERCOM_I2CM_SYNCBUSY_MASK) {}
+#endif
+
         /* Save data to buffer. */
         data[count] = dev->DATA.reg;
 
@@ -491,7 +526,11 @@ static inline int _read(SercomI2cm *dev, uint8_t *data, int length)
 static inline void _stop(SercomI2cm *dev)
 {
     /* Wait for hardware module to sync */
+#if defined(CPU_FAM_SAMD20)
+    while (dev->STATUS.reg & SERCOM_I2CM_STATUS_SYNCBUSY) {}
+#else
     while (dev->SYNCBUSY.reg & SERCOM_I2CM_SYNCBUSY_MASK) {}
+#endif
     /* Stop command */
     dev->CTRLB.reg |= SERCOM_I2CM_CTRLB_CMD(3);
     /* Wait for bus to be idle again */
