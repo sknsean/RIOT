@@ -25,6 +25,8 @@
 #include "periph/uart.h"
 #include "periph/gpio.h"
 
+#define SHIFT 32
+
 /**
  * @brief   Allocate memory to store the callback functions
  */
@@ -61,10 +63,35 @@ int uart_init(uart_t uart, uint32_t baudrate, uart_rx_cb_t rx_cb, void *arg)
     return UART_OK;
 }
 
+static uint64_t long_division(uint64_t n, uint64_t d)
+{
+    int32_t i;
+    uint64_t q = 0, r = 0, bit_shift;
+    for (i = 63; i >= 0; i--) {
+        bit_shift = (uint64_t)1 << i;
+
+        r = r << 1;
+
+        if (n & bit_shift) {
+            r |= 0x01;
+        }
+
+        if (r >= d) {
+            r = r - d;
+            q |= bit_shift;
+        }
+    }
+
+    return q;
+}
+
 static int init_base(uart_t uart, uint32_t baudrate)
 {
     uint32_t baud;
     SercomUsart *dev;
+    uint64_t temp1;
+    uint64_t ratio = 0;
+    uint64_t scale = 0;
 
     if ((unsigned int)uart >= UART_NUMOF) {
         return UART_NODEV;
@@ -73,7 +100,10 @@ static int init_base(uart_t uart, uint32_t baudrate)
     /* get the devices base register */
     dev = _uart(uart);
     /* calculate baudrate */
-    baud =  ((((uint32_t)CLOCK_CORECLOCK * 10) / baudrate) / 16);
+    temp1 = ((16 * (uint64_t)baudrate) << SHIFT);
+    ratio = long_division(temp1, CLOCK_CORECLOCK);
+    scale = ((uint64_t)1 << SHIFT) - ratio;
+    baud = (65536 * scale) >> SHIFT;
     /* enable sync and async clocks */
     uart_poweron(uart);
     /* configure pins */
