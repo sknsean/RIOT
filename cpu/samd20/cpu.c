@@ -48,15 +48,12 @@ static void clk_init(void)
     GCLK->CTRL.reg = GCLK_CTRL_SWRST;
     while (GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY) {}
 
-    /* setup generic clock 1 to feed DPLL with 1MHz */
-    GCLK->GENDIV.reg = (GCLK_GENDIV_DIV(8) |
+    /* setup generic clock 1 to 8Mhz to feed the timers */
+    GCLK->GENDIV.reg = (GCLK_GENDIV_DIV(1) |
                         GCLK_GENDIV_ID(1));
     GCLK->GENCTRL.reg = (GCLK_GENCTRL_GENEN |
                          GCLK_GENCTRL_SRC_OSC8M |
                          GCLK_GENCTRL_ID(1));
-    GCLK->CLKCTRL.reg = (GCLK_CLKCTRL_GEN(1) |
-                         GCLK_CLKCTRL_ID(1) |
-                         GCLK_CLKCTRL_CLKEN);
     while (GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY) {}
 
     /* enable DFLL */
