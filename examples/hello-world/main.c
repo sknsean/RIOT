@@ -20,6 +20,8 @@
  */
 
 #include <stdio.h>
+#include "xtimer.h"
+#include "periph/gpio.h"
 
 int main(void)
 {
@@ -27,6 +29,12 @@ int main(void)
 
     printf("You are running RIOT on a(n) %s board.\n", RIOT_BOARD);
     printf("This board features a(n) %s MCU.\n", RIOT_MCU);
+
+    while(1) {
+        //xtimer_usleep(60000000);
+        xtimer_usleep(5000000);
+        leds_toggle();
+    }
 
     return 0;
 }
