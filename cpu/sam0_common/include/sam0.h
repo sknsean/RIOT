@@ -66,6 +66,8 @@ extern "C" {
 #elif defined(CPU_MODEL_SAMR21G18A)
   #include "vendor/samr21/include/samr21g18a.h"
 
+#elif defined(CPU_MODEL_SAMD20E18)
+  #include "vendor/samd20/include/samd20e18.h"
 #elif defined(CPU_MODEL_SAMD21E15A)
   #include "vendor/samd21/include/samd21e15a.h"
 #elif defined(CPU_MODEL_SAMD21E16A)
