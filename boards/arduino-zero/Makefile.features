@@ -4,6 +4,7 @@ FEATURES_PROVIDED += periph_gpio
 FEATURES_PROVIDED += periph_i2c
 FEATURES_PROVIDED += periph_spi
 FEATURES_PROVIDED += periph_uart
+FEATURES_PROVIDED += periph_timer
 
 # The board MPU family (used for grouping by the CI system)
 FEATURES_MCU_GROUP = cortex_m0_2
