@@ -49,19 +49,19 @@ int timer_init(tim_t dev, unsigned long freq, timer_cb_t cb, void *arg)
     }
 
 /* select the clock generator depending on the main clock source:
- * GCLK0 (1MHz) if we use the internal 8MHz oscillator
- * GCLK1 (8MHz) if we use the PLL */
-#if CLOCK_USE_PLL
-    /* configure GCLK1 (configured to 1MHz) to feed TC3, TC4 and TC5 */;
-    GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK1 | (TC3_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
+ * GCLK0 (8MHz) if we use the internal 8MHz oscillator
+ * GCLK1 (8MHz) if we use the DFLL */
+#if CLOCK_USE_DFLL
+    /* configure GCLK1 (configured to 8MHz) to feed TC3, TC4 and TC5 */;
+    GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK1 | (TC0_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
     while (GCLK->STATUS.bit.SYNCBUSY) {}
     /* TC4 and TC5 share the same channel */
-    GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK1 | (TC4_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
+//    GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK1 | (TC1_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
 #else
     /* configure GCLK0 to feed TC3, TC4 and TC5 */;
-    GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | (TC3_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
+    GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | (TC0_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
     /* TC4 and TC5 share the same channel */
-    GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | (TC4_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
+  //  GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | (TC1_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
 #endif
     while (GCLK->STATUS.bit.SYNCBUSY) {}
 
@@ -71,19 +71,14 @@ int timer_init(tim_t dev, unsigned long freq, timer_cb_t cb, void *arg)
         if (TIMER_0_DEV.CTRLA.bit.ENABLE) {
             return 0;
         }
-        PM->APBCMASK.reg |= PM_APBCMASK_TC3;
+        PM->APBCMASK.reg |= PM_APBCMASK_TC0;
         /* reset timer */
         TIMER_0_DEV.CTRLA.bit.SWRST = 1;
         while (TIMER_0_DEV.CTRLA.bit.SWRST) {}
         /* choosing 16 bit mode */
-        TIMER_0_DEV.CTRLA.bit.MODE = TC_CTRLA_MODE_COUNT16_Val;
-#if CLOCK_USE_PLL
-        /* sourced by 1MHz with prescaler 1 results in... you know it :-) */
-        TIMER_0_DEV.CTRLA.bit.PRESCALER = TC_CTRLA_PRESCALER_DIV1_Val;
-#else
+        TIMER_0_DEV.CTRLA.bit.MODE = TC_CTRLA_MODE_COUNT32_Val;
         /* sourced by 8MHz with Presc 8 results in 1MHz clk */
         TIMER_0_DEV.CTRLA.bit.PRESCALER = TC_CTRLA_PRESCALER_DIV8_Val;
-#endif
         /* choose normal frequency operation */
         TIMER_0_DEV.CTRLA.bit.WAVEGEN = TC_CTRLA_WAVEGEN_NFRQ_Val;
         break;
@@ -93,7 +88,7 @@ int timer_init(tim_t dev, unsigned long freq, timer_cb_t cb, void *arg)
         if (TIMER_1_DEV.CTRLA.bit.ENABLE) {
             return 0;
         }
-        PM->APBCMASK.reg |= PM_APBCMASK_TC4;
+        PM->APBCMASK.reg |= PM_APBCMASK_TC1;
         /* reset timer */
         TIMER_1_DEV.CTRLA.bit.SWRST = 1;
 
@@ -101,13 +96,8 @@ int timer_init(tim_t dev, unsigned long freq, timer_cb_t cb, void *arg)
 
 
         TIMER_1_DEV.CTRLA.bit.MODE = TC_CTRLA_MODE_COUNT32_Val;
-#if CLOCK_USE_PLL
-        /* sourced by 1MHz and prescaler 1 to reach 1MHz */
-        TIMER_1_DEV.CTRLA.bit.PRESCALER = TC_CTRLA_PRESCALER_DIV1_Val;
-#else
         /* sourced by 8MHz with Presc 8 results in 1Mhz clk */
         TIMER_1_DEV.CTRLA.bit.PRESCALER = TC_CTRLA_PRESCALER_DIV8_Val;
-#endif
         /* choose normal frequency operation */
         TIMER_1_DEV.CTRLA.bit.WAVEGEN = TC_CTRLA_WAVEGEN_NFRQ_Val;
         break;
@@ -295,12 +285,12 @@ static inline void _irq_enable(tim_t dev)
     switch (dev) {
 #if TIMER_0_EN
         case TIMER_0:
-            NVIC_EnableIRQ(TC3_IRQn);
+            NVIC_EnableIRQ(TC0_IRQn);
             break;
 #endif
 #if TIMER_1_EN
         case TIMER_1:
-            NVIC_EnableIRQ(TC4_IRQn);
+            NVIC_EnableIRQ(TC1_IRQn);
             break;
 #endif
         case TIMER_UNDEFINED:
