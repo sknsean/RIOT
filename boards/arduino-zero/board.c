@@ -32,5 +32,10 @@ void board_init(void)
     gpio_init(LED0_PIN, GPIO_OUT);
 
     gpio_set(LED0_PIN);
-    //gpio_clear(LED0_PIN);
+    gpio_clear(LED0_PIN);
+}
+
+void leds_toggle(void)
+{
+    gpio_toggle(LED0_PIN);
 }

@@ -25,7 +25,6 @@
 #include "cpu.h"
 #include "periph_conf.h"
 #include "periph_cpu.h"
-#include "arduino_pinmap.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,6 +56,7 @@ extern "C" {
  * @brief   Initialize board specific hardware, including clock, LEDs and std-IO
  */
 void board_init(void);
+void leds_toggle(void);
 
 #ifdef __cplusplus
 }
