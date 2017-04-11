@@ -117,7 +117,7 @@ static const uart_conf_t uart_config[] = {
 };
 
 /* interrupt function name mapping */
-#define UART_0_ISR          isr_sercom0
+#define UART_0_ISR          isr_sercom3
 
 #define UART_NUMOF          (sizeof(uart_config) / sizeof(uart_config[0]))
 /** @} */
