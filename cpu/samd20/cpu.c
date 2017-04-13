@@ -29,12 +29,15 @@ static void clk_init(void)
 {
     /* enable clocks for the power, sysctrl and gclk modules */
     PM->APBAMASK.reg = (PM_APBAMASK_PM | PM_APBAMASK_SYSCTRL |
-                        PM_APBAMASK_GCLK);
+                        PM_APBAMASK_GCLK | PM_APBAMASK_WDT);
 
-    /* adjust NVM wait states, errata 13134 */
-    PM->APBAMASK.reg |= PM_AHBMASK_NVMCTRL;
+    /* Overwriting the default value of the NVMCTRL.CTRLB.MANW bit (errata reference 13134) */
+    NVMCTRL->CTRLB.bit.MANW = 1;
+
+    /* 1.62V to 2.7V = 3, 2.7V to 3.63V = 1 */
     NVMCTRL->CTRLB.reg |= NVMCTRL_CTRLB_RWS(1);
-    PM->APBAMASK.reg &= ~PM_AHBMASK_NVMCTRL;
+
+    PM->APBAMASK.reg &= ~PM_APBAMASK_WDT;
 
     /* configure internal 8MHz oscillator to run without prescaler */
     SYSCTRL->OSC8M.bit.PRESC = 0;
