@@ -51,18 +51,11 @@ int timer_init(tim_t dev, unsigned long freq, timer_cb_t cb, void *arg)
 /* select the clock generator depending on the main clock source:
  * GCLK0 (8MHz) if we use the internal 8MHz oscillator
  * GCLK1 (8MHz) if we use the DFLL */
-#if CLOCK_USE_DFLL
     /* configure GCLK1 (configured to 8MHz) to feed TC3, TC4 and TC5 */;
     GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK1 | (TC0_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
     while (GCLK->STATUS.bit.SYNCBUSY) {}
     /* TC4 and TC5 share the same channel */
 //    GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK1 | (TC1_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
-#else
-    /* configure GCLK0 to feed TC3, TC4 and TC5 */;
-    GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | (TC0_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
-    /* TC4 and TC5 share the same channel */
-  //  GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | (TC1_GCLK_ID << GCLK_CLKCTRL_ID_Pos)));
-#endif
     while (GCLK->STATUS.bit.SYNCBUSY) {}
 
     switch (dev) {
