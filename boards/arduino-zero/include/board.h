@@ -52,6 +52,8 @@ extern "C" {
 #define LED0_TOGGLE         (LED_PORT.OUTTGL.reg = LED0_MASK)
 /** @} */
 
+#define SW0_PIN             GPIO_PIN(PA, 27)
+
 /**
  * @brief   Initialize board specific hardware, including clock, LEDs and std-IO
  */
