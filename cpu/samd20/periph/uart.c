@@ -106,11 +106,6 @@ static int init_base(uart_t uart, uint32_t baudrate)
     baud = (65536 * scale) >> SHIFT;
     /* enable sync and async clocks */
     uart_poweron(uart);
-    /* configure pins */
-    gpio_init(uart_config[uart].rx_pin, GPIO_IN);
-    gpio_init_mux(uart_config[uart].rx_pin, uart_config[uart].mux);
-    gpio_init(uart_config[uart].tx_pin, GPIO_OUT);
-    gpio_init_mux(uart_config[uart].tx_pin, uart_config[uart].mux);
     /* reset the UART device */
     dev->CTRLA.reg = SERCOM_USART_CTRLA_SWRST;
     while (dev->STATUS.reg & SERCOM_USART_STATUS_SYNCBUSY) {}
@@ -146,6 +141,12 @@ void uart_poweron(uart_t uart)
                          (SERCOM0_GCLK_ID_CORE + sercom_id(_uart(uart))) <<
                           GCLK_CLKCTRL_ID_Pos);
     while (GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY) {}
+
+    /* configure pins */
+    gpio_init(uart_config[uart].rx_pin, GPIO_IN);
+    gpio_init_mux(uart_config[uart].rx_pin, uart_config[uart].mux);
+    gpio_init(uart_config[uart].tx_pin, GPIO_OUT);
+    gpio_init_mux(uart_config[uart].tx_pin, uart_config[uart].mux);
 }
 
 void uart_poweroff(uart_t uart)
@@ -154,6 +155,11 @@ void uart_poweroff(uart_t uart)
     GCLK->CLKCTRL.reg = ((SERCOM0_GCLK_ID_CORE + sercom_id(_uart(uart))) <<
                           GCLK_CLKCTRL_ID_Pos);
     while (GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY) {}
+
+    /* configure pins */
+    gpio_init(uart_config[uart].rx_pin, GPIO_IN_PD);
+    gpio_init(uart_config[uart].tx_pin, GPIO_IN_PD);
+
 }
 
 static inline void irq_handler(int dev)
