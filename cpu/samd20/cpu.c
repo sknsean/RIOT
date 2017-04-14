@@ -106,8 +106,8 @@ static void clk_init(void)
 #endif
 
     /* Setup Clock generator 2 with divider 1 (32.768kHz) */
-    GCLK->GENDIV.reg  = (GCLK_GENDIV_ID(2)  | GCLK_GENDIV_DIV(0));
-    GCLK->GENCTRL.reg = (GCLK_GENCTRL_ID(2) | GCLK_GENCTRL_GENEN |
+    GCLK->GENDIV.reg  = (GCLK_GENDIV_ID(2)  | GCLK_GENDIV_DIV(4));
+    GCLK->GENCTRL.reg = (GCLK_GENCTRL_ID(2) | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_DIVSEL |
             GCLK_GENCTRL_RUNSTDBY |
             GCLK_GENCTRL_SRC_OSCULP32K);
 
