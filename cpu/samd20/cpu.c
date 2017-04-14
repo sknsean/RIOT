@@ -46,7 +46,6 @@ static void clk_init(void)
     SYSCTRL->OSC8M.bit.ENABLE = 1;
     while (!(SYSCTRL->PCLKSR.reg & SYSCTRL_PCLKSR_OSC8MRDY)) {}
 
-#if CLOCK_USE_DFLL
     /* reset the GCLK module so it is in a known state */
     GCLK->CTRL.reg = GCLK_CTRL_SWRST;
     while (GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY) {}
@@ -59,6 +58,7 @@ static void clk_init(void)
                          GCLK_GENCTRL_ID(1));
     while (GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY) {}
 
+#if CLOCK_USE_DFLL
     /* enable DFLL */
 #define NVM_DFLL_COARSE_POS    58 /* DFLL48M Coarse calibration value bit position.*/
 #define NVM_DFLL_COARSE_SIZE   6  /* DFLL48M Coarse calibration value bit size.*/
@@ -99,6 +99,11 @@ static void clk_init(void)
 
     /* make sure we synchronize clock generator 0 before we go on */
     while (GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY) {}
+
+#if CLOCK_USE_DFLL
+    SYSCTRL->DFLLCTRL.reg = SYSCTRL->DFLLCTRL.reg | SYSCTRL_DFLLCTRL_ONDEMAND;
+    while (!(SYSCTRL->PCLKSR.reg & SYSCTRL_PCLKSR_DFLLRDY)) {}
+#endif
 
     /* Setup Clock generator 2 with divider 1 (32.768kHz) */
     GCLK->GENDIV.reg  = (GCLK_GENDIV_ID(2)  | GCLK_GENDIV_DIV(0));
