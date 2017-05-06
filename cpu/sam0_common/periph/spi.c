@@ -47,7 +47,7 @@ static inline SercomSpi *dev(spi_t bus)
 
 static inline void poweron(spi_t bus)
 {
-#if defined(CPU_FAM_SAMD21)
+#if defined(CPU_FAM_SAMD20) || defined(CPU_FAM_SAMD21)
     PM->APBCMASK.reg |= (PM_APBCMASK_SERCOM0 << sercom_id(dev(bus)));
 #elif defined(CPU_FAM_SAML21)
     MCLK->APBCMASK.reg |= (MCLK_APBCMASK_SERCOM0 << sercom_id(dev(bus)));
@@ -56,7 +56,7 @@ static inline void poweron(spi_t bus)
 
 static inline void poweroff(spi_t bus)
 {
-#if defined(CPU_FAM_SAMD21)
+#if defined(CPU_FAM_SAMD20) || defined(CPU_FAM_SAMD21)
     PM->APBCMASK.reg &= ~(PM_APBCMASK_SERCOM0 << sercom_id(dev(bus)));
 #elif defined(CPU_FAM_SAML21)
     MCLK->APBCMASK.reg &= ~(MCLK_APBCMASK_SERCOM0 << sercom_id(dev(bus)));
@@ -140,7 +140,9 @@ int spi_acquire(spi_t bus, spi_cs_t cs, spi_mode_t mode, spi_clk_t clk)
 
     /* finally enable the device */
     dev(bus)->CTRLA.reg |= SERCOM_SPI_CTRLA_ENABLE;
-#if !defined(CPU_FAM_SAMD20)
+#if defined(CPU_FAM_SAMD20)
+    while (dev(bus)->STATUS.reg & SERCOM_SPI_STATUS_SYNCBUSY) {}
+#else
     while (dev(bus)->SYNCBUSY.reg & SERCOM_SPI_SYNCBUSY_ENABLE) {}
 #endif
 
@@ -151,7 +153,9 @@ void spi_release(spi_t bus)
 {
     /* disable device and put it back to sleep */
     dev(bus)->CTRLA.reg &= ~(SERCOM_SPI_CTRLA_ENABLE);
-#if !defined(CPU_FAM_SAMD20)
+#if defined(CPU_FAM_SAMD20)
+    while (dev(bus)->STATUS.reg & SERCOM_SPI_STATUS_SYNCBUSY) {}
+#else
     while (dev(bus)->SYNCBUSY.reg & SERCOM_SPI_SYNCBUSY_ENABLE) {}
 #endif
     poweroff(bus);
@@ -168,7 +172,7 @@ void spi_transfer_bytes(spi_t bus, spi_cs_t cs, bool cont,
     assert(out || in);
 
     if (cs != SPI_CS_UNDEF) {
-        gpio_clear((gpio_t)cs);
+       gpio_clear((gpio_t)cs);
     }
 
     for (int i = 0; i < (int)len; i++) {
