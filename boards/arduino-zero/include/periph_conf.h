@@ -210,8 +210,8 @@ static const spi_conf_t spi_config[] = {
 #define I2C_0_GCLK_ID       SERCOM3_GCLK_ID_CORE
 #define I2C_0_GCLK_ID_SLOW  SERCOM3_GCLK_ID_SLOW
 /* I2C 0 pin configuration */
-#define I2C_0_SDA           GPIO_PIN(PA, 22)
-#define I2C_0_SCL           GPIO_PIN(PA, 23)
+#define I2C_0_SDA           GPIO_PIN(PA, 16)
+#define I2C_0_SCL           GPIO_PIN(PA, 17)
 #define I2C_0_MUX           GPIO_MUX_C
 
 /**
@@ -235,6 +235,18 @@ static const spi_conf_t spi_config[] = {
 #define RTT_FREQUENCY       (32768U)    /* in Hz. For changes see `rtt.c` */
 #define RTT_RUNSTDBY        (1)         /* Keep RTT running in sleep states */
 /** @} */
+
+/**
+ * @brief   Define the interface to the AT86RF231 radio
+ *
+ * {spi bus, spi speed, cs pin, int pin, reset pin, sleep pin}
+ */
+#define AT86RF2XX_PARAMS_BOARD      {.spi       = SPI_DEV(0), \
+                                     .spi_clk   = SPI_CLK_5MHZ, \
+                                     .cs_pin    = GPIO_PIN(PA, 8), \
+                                     .int_pin   = GPIO_PIN(PA, 3), \
+                                     .sleep_pin = GPIO_PIN(PA, 22), \
+                                     .reset_pin = GPIO_PIN(PA, 5)}
 
 #ifdef __cplusplus
 }
